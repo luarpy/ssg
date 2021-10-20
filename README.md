@@ -24,6 +24,5 @@ SCRIPT="../path/to/script.js" # or "../path/to/scripts_dir"
 I ended up needing a configuration file because I only use one CSS style sheet and I did not wanted to copy it to every subdirectory inside the main path. This way the script manages the relative path to this files.
 
 ## TODO
-- [ ] Add option to generate table of contents
-- [ ] Add support for configuration file
+- [X] Add support for configuration file
 - [ ] Change ```render_html_file()```. I need something more flexible and readable than _awk_ syntax for replacing characters
