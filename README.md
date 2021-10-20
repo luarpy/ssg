@@ -8,6 +8,16 @@ Custom static site generator based on the work of [romanzolotarev](https://www.r
 ```sh
 sudo apt install lowdown
 ```
+## Installation
+```sh
+git clone https://github.com/luarpy/ssg.git
+cd ssg
+chmod +x ssg
+```
+And place in your PATH variable if you want to use it as a system binary:
+```sh
+export PATH="$PATH:$PWD"
+´´´
 
 ## Usage
 Follow this [example](https://www.romanzolotarev.com/ssg.html#:~:text=bin/Markdown.pl%0A%24-,usage,-make%20sure%20ssg6)
