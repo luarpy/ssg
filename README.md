@@ -26,3 +26,4 @@ I ended up needing a configuration file because I only use one CSS style sheet a
 ## TODO
 - [ ] Add option to generate table of contents
 - [ ] Add support for configuration file
+- [ ] Change ```render_html_file()``. I need something more flexible and readable than _awk_ syntax for replacing characters
