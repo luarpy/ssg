@@ -1,9 +1,9 @@
-#!/bin/sh -e
+#!/bin/bash
 
 # LICENSE: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 # Load the configuration file if it exists in src/config
-[ -f "$1/config" ] && source "$1/config"
+[ -f "$1/.config" ] && source "$1/.config"
 
 main() {
 	test -n "$1" || usage
@@ -38,31 +38,24 @@ main() {
 	f_file="$src/_footer.html"
 	test -f "$f_file" && FOOTER=$(cat "$f_file") && export FOOTER
     test -f "$h_file" && HEADER=$(cat "$h_file") && export HEADER
-
 	list_dirs "$src" |
 	(cd "$src" && cpio -pdu "$dst")
 
 	fs=$(
-        if test -f "$dst/.files"
-            then list_affected_files "$src" "$dst/.files"
+        if [ -f "$dst/.files" ]; then 
+            list_affected_files "$src" "$dst/.files"
         else
             list_files "$1"
         fi
 	)
+	if [ -n "$fs" ]; then
+		echo "$fs" | tee "$dst/.files" # Añade los archivos a la lista de procesados
 
-	if test -n "$fs"
-	then
-		echo "$fs" | tee "$dst/.files"
-
-		if echo "$fs" | grep -q '\.md$'
+		if echo "$fs" | grep --quiet '\.md$'
 		then
-			if test -x "$(which lowdown 2> /dev/null)"
-			then
-				echo "$fs" | grep '\.md$' |
-				render_md_files_lowdown "$src" "$dst" "$title"
-			else
-				if test -x "$(which Markdown.pl 2> /dev/null)"
-				then
+			if [ -x "$(which lowdown 2> /dev/null)" ] ; then
+				echo "$fs" | grep '\.md$' | 	render_md_files_lowdown "$src" "$dst" "$title"
+			else if [ -x "$(which Markdown.pl 2> /dev/null)" ] ; then
 					echo "$fs" | grep '\.md$' |
 					render_md_files_Markdown_pl "$src" "$dst" "$title"
 				else
@@ -75,7 +68,7 @@ main() {
 		echo "$fs" | grep '\.html$' |
 		render_html_files "$src" "$dst" "$title"
         
-#        echo "$fs" | grep '\.html$' | append_stylesheets "$dst" "$title" 
+        # IDEA: Creo que sería buena idea hacer que eliminase los espacios entre tags para así reducir el espacio que ocupa el documento
 
 		echo "$fs" | grep -Ev '\.md$|\.html$' |
 		(cd "$src" && cpio -pu "$dst")
@@ -94,7 +87,7 @@ main() {
 	test -n "$urls" &&
 	render_sitemap "$urls" "$base_url" "$date" > "$dst/sitemap.xml"
 
-	render_article_list "$urls" "$base_url" "$dst" "$src"
+	#render_article_list "$urls" "$base_url" "$dst" "$src"
 
 	print_status 'url' 'urls' "$urls" >&2
 	echo >&2
@@ -132,8 +125,8 @@ readlink_f() {
 print_status() {
 	test -z "$3" && printf 'no %s' "$2" && return
 
-	echo "$3" | awk -v singular="$1" -v plural="$2" '
-	END {
+    echo "$3" | awk -v singular="$1" -v plural="$2" ' 
+    END {
 		if (NR==1) printf NR " " singular
 		if (NR>1) printf NR " " plural
 	}'
@@ -196,63 +189,50 @@ render_html_files() {
 
 render_md_files_lowdown() {
 	# Check if the previous file has a date in it
-	while read -r f
-	do
+	while read -r f; do
         lowdown \
 			--html-no-escapehtml \
 			--html-no-skiphtml \
 			--parse-no-metadata \
-			--parse-no-autolink <"$1/$f" |
-			render_html_file "$3" \
-				>"$2/${f%\.md}.html"
-
+			--parse-no-autolink <"$1/$f" | render_html_file "$3" >"$2/${f%\.md}.html"
 	done
 }
 
 
 render_md_files_Markdown_pl() {
-	while read -r f
-	do
-		Markdown.pl < "$1/$f" |
-		render_html_file "$3" \
-		> "$2/${f%\.md}.html"
+    while read -r f;	do
+		Markdown.pl < "$1/$f" | render_html_file "$3" > "$2/${f%\.md}.html"
 	done
 }
 
 
 render_html_file() {
-	# h/t Devin Teske
-    #TODO: calculate STYLESHEET path
-    test -n STYLESHEET && export STYLESHEET
-	awk -v title="$1" '
-	{ body = body "\n" $0 }
-	END {
-		body = substr(body, 2)
-		if (body ~ /<[Hh][Tt][Mm][Ll]/) {
-			print body
-			exit
-		}
-		if (match(body, /<[[:space:]]*[Hh]1(>|[[:space:]][^>]*>)/)) {
-			t = substr(body, RSTART + RLENGTH)
-			sub("<[[:space:]]*/[[:space:]]*[Hh]1.*", "", t)
-			gsub(/^[[:space:]]*|[[:space:]]$/, "", t)
-			if (t) title = t " &mdash; " title
-		}
-		n = split(ENVIRON["HEADER"], header, /\n/)
-		for (i = 1; i <= n; i++) {
-			if (match(tolower(header[i]), "<title></title>")) {
-				head = substr(header[i], 1, RSTART - 1)
-				tail = substr(header[i], RSTART + RLENGTH)
-				print head "<title>" title "</title>" tail
-            } if(match(tolower(header[i]), "<!--STYLESHEET-->") {
-             	head = substr(header[i], 1, RSTART - 1)
-				tail = substr(header[i], RSTART + RLENGTH)
-                print head "<link rel=\"stylesheet\" type=\"text/css\" href=\"" ENVIRON["STYLESHEET"] "\">" tail
-            } else print header[i]
-		}
-		print body
-		print ENVIRON["FOOTER"]
-	}'
+    # Debe imprimir:
+    #   HEADER
+    #       |-> Añadir el titulo entre los tags <title></title>
+    #       `-> Añadir la ruta hasta el style.css en caso de que haya
+    #   BODY
+    #   FOOTER
+    if [ -p /dev/stdin ]; then # Si la entrada es por standard input
+        file="$(cat -)" # Mete stdin en la variable
+    else # Si la entrada es normal
+        file="$2" 
+    fi
+    
+    [ -z "$file" ] && return 1
+    local title="$1"
+
+    local H1_pattern="\<*.[Hh]1*.\>\|\<\/*.[Hh]1*.\>"
+    if grep --quiet "$H1_pattern" "$file"; then
+       title="$(echo "$file" | pup 'h1' | grep --invert-match "$H1_pattern")"
+    fi
+    # Encajar el título entre <title></title>
+
+    local title_pattern="\<*.title*.\>\<\/*.title*.\>"
+    file="$(echo "$file" | sed 's/$title_pattern/\<title\>$title\<\/title\>/')"
+    echo "$HEADER" 
+    echo "$file" 
+    echo "$FOOTER"
 }
 
 
