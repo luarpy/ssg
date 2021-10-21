@@ -222,14 +222,16 @@ render_html_file() {
     [ -z "$file" ] && return 1
     local title="$1"
 
-    local H1_pattern="\<*.[Hh]1*.\>\|\<\/*.[Hh]1*.\>"
-    if grep --quiet "$H1_pattern" "$file"; then
-       title="$(echo "$file" | pup 'h1' | grep --invert-match "$H1_pattern")"
+    local H1_pattern="<*.[Hh]1*.>\|<\/*.[Hh]1*.>"
+    if echo $file | grep --quiet "$H1_pattern" >&2; then
+        #FIXME: se le queda al principio del nombre del título un espacio
+        title="$(echo "$file" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
+        
     fi
     # Encajar el título entre <title></title>
-
-    local title_pattern="\<*.title*.\>\<\/*.title*.\>"
-    file="$(echo "$file" | sed 's/$title_pattern/\<title\>$title\<\/title\>/')"
+    local title_pattern="<*.title*.><\/*.title*.>"
+    HEADER="$(echo "$HEADER" | sed "s/$title_pattern/\<title\>$title\<\/title\>/")"
+    #FIXME: mejor que echo usar printf para imprimir la salida
     echo "$HEADER" 
     echo "$file" 
     echo "$FOOTER"
