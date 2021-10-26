@@ -2,8 +2,10 @@
 
 # LICENSE: https://www.gnu.org/licenses/gpl-3.0.en.html
 
-# Load the configuration file if it exists in src/config
+# Load the configuration file if it exists in src/.config
 [ -f "$1/.config" ] && source "$1/.config"
+
+VERSION='0.1'
 
 main() {
 	test -n "$1" || usage
@@ -30,8 +32,6 @@ main() {
 		done < "$src/.ssgignore"
 	)
 
-	# files
-
 	title="$3"
 
 	h_file="$src/_header.html"
@@ -48,6 +48,7 @@ main() {
             list_files "$1"
         fi
 	)
+
 	if [ -n "$fs" ]; then
 		echo "$fs" | tee "$dst/.files" # Añade los archivos a la lista de procesados
 
@@ -55,9 +56,9 @@ main() {
 		then
 			if [ -x "$(which lowdown 2> /dev/null)" ] ; then
 				echo "$fs" | grep '\.md$' | 	render_md_files_lowdown "$src" "$dst" "$title"
-			else if [ -x "$(which Markdown.pl 2> /dev/null)" ] ; then
-					echo "$fs" | grep '\.md$' |
-					render_md_files_Markdown_pl "$src" "$dst" "$title"
+			else 
+                if [ -x "$(which Markdown.pl 2> /dev/null)" ] ; then
+                    echo "$fs" | grep '\.md$' | render_md_files_Markdown_pl "$src" "$dst" "$title"
 				else
 					echo "couldn't find lowdown nor Markdown.pl"
 					exit 3
@@ -65,19 +66,20 @@ main() {
 			fi
 		fi
 
-		echo "$fs" | grep '\.html$' |
-		render_html_files "$src" "$dst" "$title"
+		echo "$fs" | grep '\.html$' | render_html_files "$src" "$dst" "$title"
         
-        # IDEA: Creo que sería buena idea hacer que eliminase los espacios entre tags para así reducir el espacio que ocupa el documento
-
-		echo "$fs" | grep -Ev '\.md$|\.html$' |
-		(cd "$src" && cpio -pu "$dst")
+        #IDEA: Creo que sería buena idea hacer que eliminase los espacios entre tags para así reducir el espacio que ocupa el documento
+        
+        # Copy everything that is not Markdown or HTML files
+		echo "$fs" | grep -Ev '\.md$|\.html$' |	(cd "$src" && cpio -pu "$dst")
 	fi
-
+    
 	printf '[ssg] ' >&2
 	print_status 'file, ' 'files, ' "$fs" >&2
 
-
+    #TODO: get stylesheet.css relative path
+    # replace FCKING_PATH in every file with its relative path to dst/
+    replace_path "$2"
 	# sitemap
 
 	base_url="$4"
@@ -91,20 +93,6 @@ main() {
 
 	print_status 'url' 'urls' "$urls" >&2
 	echo >&2
-}
-
-append_stylesheets(){
-    while read -r f; do
-        append_stylesheet "$2" < "$1/$f" #> "$1/$f"
-    done
-}
-
-append_stylesheet(){
-    local html_file="$1"
-    local pattern="</head>"
-    local line2append="<link rel=\"stylesheet\" type=\"text/css\" href=\"$STYLESHEET\">" # line to append in the header before </header>
-    #sed '$!N;s/<\/head>/JAJAJ^Cn<\/head>/' src/_header.html
-    sed "$!N;s/$pattern/$line\n$pattern/" "$html_file" 
 }
 
 readlink_f() {
@@ -121,6 +109,20 @@ readlink_f() {
 	echo "$dir/$file"
 }
 
+realpath_f(){
+    local path="$(realpath --relative-to="$2" "$1")"
+    echo "${path#*/}" # removes first '../' 
+}
+
+replace_path(){
+    local files="$(list_files "$1" | grep "\.html$" | sed 's|\./||g')"
+    cd "$1"
+    while read file; do
+        sed -i 's|FCKING_PATH|'"$(realpath_f "$1" "$file")"'|g' "$file" 
+        realpath_f "$1" "$file"
+    done < <(echo "$files")
+
+}
 
 print_status() {
 	test -z "$3" && printf 'no %s' "$2" && return
@@ -136,6 +138,11 @@ print_status() {
 usage() {
 	echo "usage: ${0##*/} src dst title base_url" >&2
 	exit 1
+}
+
+version(){
+    echo "version: ${0##*/} $VERSION" >&1
+    exit 0
 }
 
 
@@ -223,12 +230,18 @@ render_html_file() {
         title="$(echo "$file" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
         
     fi
+
     
     # Insert stylesheet.css path
-    local stylesheet_line="<link rel=\"stylesheet\" type=\"text\/css\" href=\"$STYLESHEET\""
     if [ -n "$STYLESHEET" ]; then
+        local stylesheet_line="<link rel=\"stylesheet\" type=\"text\/css\" href=\"FCKING_PATH\/$STYLESHEET\">"
         #FIXME: hacer que el encajar la $stylesheet_line sea más robusto
         HEADER="$(echo "$HEADER" | sed "/<\/head>/i $stylesheet_line")"
+    fi
+
+    if [ -n "$SCRIPT" ]; then 
+        local script_line="<script type=\"text\/javascript\" href=\"FCKING_PATH\/$SCRIPT\"><\/script>" 
+        FOOTER="$(echo "$FOOTER" | sed "/<\/body>/i $script_line")"
     fi
     
     local title_pattern="<*.title*.><\/*.title*.>"
@@ -293,5 +306,20 @@ render_sitemap() {
 "$date"'</lastmod><priority>1.0</priority></url>#'
 	echo '</urlset>'
 }
+
+# Simple arguments proccessing
+#while [ ! -z "$1" ]; do
+#    case "$1" in
+#        -h|--help)
+#            usage
+#            exit 0
+#            ;;
+#        -v|--version)
+#            version
+#            exit 0
+#            ;;
+#    esac
+#    shift
+#done
 
 main "$@"
