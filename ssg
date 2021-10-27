@@ -77,8 +77,10 @@ main() {
 	printf '[ssg] ' >&2
 	print_status 'file, ' 'files, ' "$fs" >&2
     
+    # Features
     add_stylesheet "$2"
-    add_script "$2"
+    add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
+    add_mainpage_button "$2" "$4"
 
 	# sitemap
 
@@ -127,11 +129,22 @@ add_script(){
         [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
         while read file; do
             local path="$(realpath_f "$PWD" "$file")"
-            local script_line="<script type=\"text\/javascript\" href=\"$path$SCRIPT\"><\/script>" 
+            local script_line="<script type=\"text\/javascript\" src=\"$path$SCRIPT\"><\/script>" 
             sed -i "/<\/body>/i $script_line" "$file"
         done < <(echo "$files")
     fi
     cd ..
+}
+
+add_mainpage_button(){
+    [ -n "$BUTTON_TEXT" ] || BUTTON_TEXT="Main Page"
+    local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+    [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+    while read file; do
+        local text_line="<p class=\"main-page\"><a class=\"back\" href=\"$2\">$BUTTON_TEXT<\/a><\/p>" 
+        sed -i "/<\/body>/i $text_line" "$file"
+    done < <(echo "$files")
+
 }
 
 realpath_f(){
