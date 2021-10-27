@@ -80,6 +80,7 @@ main() {
     # Features
     add_stylesheet "$2"
     add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
+    add_noscript "$2"
     add_mainpage_button "$2" "$4"
 
 	# sitemap
@@ -136,7 +137,17 @@ add_script(){
     cd ..
 }
 
+add_noscript(){
+    local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+    [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+    while read file; do
+        local noscript_line="<noscript>JavaScript is disabled in your browser </noscript>"
+        sed -i "/<\/body>/i $noscript_line" "$file"
+    done < <(echo "$files")
+    cd ..
+}
 add_mainpage_button(){
+    #TODO: omit creating 'Main Page' button in index.html
     [ -n "$BUTTON_TEXT" ] || BUTTON_TEXT="Main Page"
     local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
     [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
@@ -291,7 +302,7 @@ render_article_list() {
 	echo ${urls}
 	base_url="$2"
 	items=""
-	for i in $1; do
+	for i in $urls; do
 		if ! echo $i | grep -Eq "index|contact"; then
 			page_title=$(head -n 1 "$4/${i%\.html}.md" | cut -c 3-)
 			page_date=$(head -2 "$4/${i%\.html}.md" | tail -1)
@@ -333,20 +344,5 @@ render_sitemap() {
 "$date"'</lastmod><priority>1.0</priority></url>#'
 	echo '</urlset>'
 }
-
-# Simple arguments proccessing
-#while [ ! -z "$1" ]; do
-#    case "$1" in
-#        -h|--help)
-#            usage
-#            exit 0
-#            ;;
-#        -v|--version)
-#            version
-#            exit 0
-#            ;;
-#    esac
-#    shift
-#done
 
 main "$@"
