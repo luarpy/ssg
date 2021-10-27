@@ -76,10 +76,10 @@ main() {
     
 	printf '[ssg] ' >&2
 	print_status 'file, ' 'files, ' "$fs" >&2
+    
+    add_stylesheet "$2"
+    add_script "$2"
 
-    #TODO: get stylesheet.css relative path
-    # replace FCKING_PATH in every file with its relative path to dst/
-    replace_path "$2"
 	# sitemap
 
 	base_url="$4"
@@ -96,30 +96,55 @@ main() {
 }
 
 readlink_f() {
-	file="$1"
+	local file="$1"
 	cd "$(dirname "$file")"
 	file=$(basename "$file")
-	while test -L "$file"
-	do
+	while test -L "$file"; do
 		file=$(readlink "$file")
 		cd "$(dirname "$file")"
 		file=$(basename "$file")
 	done
-	dir=$(pwd -P)
+	local dir=$(pwd -P)
 	echo "$dir/$file"
 }
 
+add_stylesheet(){
+    if [ -n "$STYLESHEET" ]; then
+        local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+        [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+        while read file; do
+            local path="$(realpath_f "$PWD" "$file")"
+            local stylesheet_line="<link rel=\"stylesheet\" type=\"text/css\" href=\"$path$STYLESHEET\">"
+            sed -i "/<\/head>/i $stylesheet_line" "$file"
+        done < <(echo "$files")
+    fi
+    cd ..
+}
+
+add_script(){
+    if [ -n "$SCRIPT" ]; then
+        local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+        [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+        while read file; do
+            local path="$(realpath_f "$PWD" "$file")"
+            local script_line="<script type=\"text\/javascript\" href=\"$path$SCRIPT\"><\/script>" 
+            sed -i "/<\/body>/i $script_line" "$file"
+        done < <(echo "$files")
+    fi
+    cd ..
+}
+
 realpath_f(){
-    local path="$(realpath --relative-to="$2" "$1")"
-    echo "${path#*/}" # removes first '../' 
+    realpath --relative-to="$2" "$1" | tr '/' '\n'$ | sed '0,/../{//d;}' | tr '\n' '/'
 }
 
 replace_path(){
+    [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+    exit
     local files="$(list_files "$1" | grep "\.html$" | sed 's|\./||g')"
-    cd "$1"
+    pwd
     while read file; do
-        sed -i 's|FCKING_PATH|'"$(realpath_f "$1" "$file")"'|g' "$file" 
-        realpath_f "$1" "$file"
+        sed -i 's|FCKING_PATH|'"$(realpath_f "$1" "$file")"'|g' "$file" --quiet 
     done < <(echo "$files")
 
 }
@@ -232,17 +257,6 @@ render_html_file() {
     fi
 
     
-    # Insert stylesheet.css path
-    if [ -n "$STYLESHEET" ]; then
-        local stylesheet_line="<link rel=\"stylesheet\" type=\"text\/css\" href=\"FCKING_PATH\/$STYLESHEET\">"
-        #FIXME: hacer que el encajar la $stylesheet_line sea más robusto
-        HEADER="$(echo "$HEADER" | sed "/<\/head>/i $stylesheet_line")"
-    fi
-
-    if [ -n "$SCRIPT" ]; then 
-        local script_line="<script type=\"text\/javascript\" href=\"FCKING_PATH\/$SCRIPT\"><\/script>" 
-        FOOTER="$(echo "$FOOTER" | sed "/<\/body>/i $script_line")"
-    fi
     
     local title_pattern="<*.title*.><\/*.title*.>"
     HEADER="$(echo "$HEADER" | sed "s/$title_pattern/\<title\>$title\<\/title\>/")"
