@@ -76,7 +76,6 @@ main() {
     
 	printf '[ssg] ' >&2
 	print_status 'file, ' 'files, ' "$fs" >&2
-    
     # Features
     add_stylesheet "$2"
     add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
@@ -121,7 +120,6 @@ add_stylesheet(){
             sed -i "/<\/head>/i $stylesheet_line" "$file"
         done < <(echo "$files")
     fi
-    cd ..
 }
 
 add_script(){
@@ -134,7 +132,6 @@ add_script(){
             sed -i "/<\/body>/i $script_line" "$file"
         done < <(echo "$files")
     fi
-    cd ..
 }
 
 add_noscript(){
