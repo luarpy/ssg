@@ -76,6 +76,7 @@ main() {
     
 	printf '[ssg] ' >&2
 	print_status 'file, ' 'files, ' "$fs" >&2
+
     # Features
     add_stylesheet "$2"
     add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
@@ -113,50 +114,55 @@ readlink_f() {
 add_stylesheet(){
     if [ -n "$STYLESHEET" ]; then
         local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
-        [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+        cd "$1"
         while read file; do
             local path="$(realpath_f "$PWD" "$file")"
             local stylesheet_line="<link rel=\"stylesheet\" type=\"text/css\" href=\"$path$STYLESHEET\">"
             sed -i "/<\/head>/i $stylesheet_line" "$file"
         done < <(echo "$files")
+        cd ..
     fi
 }
 
 add_script(){
     if [ -n "$SCRIPT" ]; then
         local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
-        [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+        cd "$1"
         while read file; do
             local path="$(realpath_f "$PWD" "$file")"
             local script_line="<script type=\"text\/javascript\" src=\"$path$SCRIPT\"><\/script>" 
             sed -i "/<\/body>/i $script_line" "$file"
         done < <(echo "$files")
+        cd ..
     fi
 }
 
 add_noscript(){
     local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
-    [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+    cd "$1"
     while read file; do
         local noscript_line="<noscript>JavaScript is disabled in your browser </noscript>"
         sed -i "/<\/body>/i $noscript_line" "$file"
     done < <(echo "$files")
     cd ..
 }
+
 add_mainpage_button(){
-    #TODO: omit creating 'Main Page' button in index.html
     [ -n "$BUTTON_TEXT" ] || BUTTON_TEXT="Main Page"
     local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
-    [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
+    cd "$1"
     while read file; do
-        local text_line="<p class=\"main-page\"><a class=\"back\" href=\"$2\">$BUTTON_TEXT<\/a><\/p>" 
-        sed -i "/<\/body>/i $text_line" "$file"
+        if echo "$file" | grep -Eqv "index\|contact"; then
+            local text_line="<p class=\"main-page\"><a class=\"back\" href=\"$2\">$BUTTON_TEXT<\/a><\/p>" 
+            sed -i "/<\/body>/i $text_line" "$file"
+        fi
     done < <(echo "$files")
+    cd ..
 
 }
 
 realpath_f(){
-    realpath --relative-to="$2" "$1" | tr '/' '\n'$ | sed '0,/../{//d;}' | tr '\n' '/'
+    realpath --relative-to="$2" "$1" | tr '/' '\n' | sed '0,/../{//d;}' | tr '\n' '/'
 }
 
 replace_path(){
@@ -277,8 +283,6 @@ render_html_file() {
         
     fi
 
-    
-    
     local title_pattern="<*.title*.><\/*.title*.>"
     HEADER="$(echo "$HEADER" | sed "s/$title_pattern/\<title\>$title\<\/title\>/")"
     #FIXME: mejor que 'echo' usar 'printf' para imprimir la salida
@@ -295,10 +299,10 @@ list_pages() {
 }
 
 render_article_list() {
-	urls="$1"
-	echo ${urls}
-	base_url="$2"
-	items=""
+    local urls="$1"
+	echo "${urls}"
+    local base_url="$2"
+	local items=""
 	for i in $urls; do
 		if ! echo $i | grep -Eq "index|contact"; then
 			page_title=$(head -n 1 "$4/${i%\.html}.md" | cut -c 3-)
@@ -310,7 +314,7 @@ render_article_list() {
 		fi
 	done
 
-	echo $urls_sorted
+	echo "$urls_sorted"
 	
 	for i in $urls_sorted; do
 		if ! echo $i | grep -Eq "index|contact"; then
