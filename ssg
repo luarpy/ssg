@@ -85,14 +85,14 @@ main() {
 
 	# sitemap
 
-	base_url="$4"
-	date=$(date +%Y-%m-%d)
- 	urls=$(list_pages "$src")
+	local base_url="$4"
+	local date=$(date +%Y-%m-%d)
+ 	local urls=$(list_pages "$src")
 
 	test -n "$urls" &&
 	render_sitemap "$urls" "$base_url" "$date" > "$dst/sitemap.xml"
 
-	#render_article_list "$urls" "$base_url" "$dst" "$src"
+	render_article_list "$urls" "$base_url" "$dst" "$src"
 
 	print_status 'url' 'urls' "$urls" >&2
 	echo >&2
@@ -169,7 +169,6 @@ replace_path(){
     [ "$PWD" != "$(readlink -f "$1")" ] && cd "$(readlink -f "$1")"
     exit
     local files="$(list_files "$1" | grep "\.html$" | sed 's|\./||g')"
-    pwd
     while read file; do
         sed -i 's|FCKING_PATH|'"$(realpath_f "$1" "$file")"'|g' "$file" --quiet 
     done < <(echo "$files")
@@ -303,30 +302,38 @@ render_article_list() {
 	echo "${urls}"
     local base_url="$2"
 	local items=""
-	for i in $urls; do
-		if ! echo $i | grep -Eq "index|contact"; then
-			page_title=$(head -n 1 "$4/${i%\.html}.md" | cut -c 3-)
-			page_date=$(head -2 "$4/${i%\.html}.md" | tail -1)
-			page_date_clean=$(echo "$page_date" | sed 's/<[^>]*>//g')
-			page_date=$(date -u -f "%B %e, %Y" "$page_date_clean" +"%s")
+    local date_format="%B %e, %Y"
+    # Sort pages by date
+    local files="$(list_files "$3" | grep '\.html$' | sed 's|\./||g')"
+	for i in ${files}; do
+		if echo "$i" | grep -Eqv "index|contact"; then
+            page_title="$(echo "$i" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
+            # IDEA: if there is not date inside de text, get it from files date
+			[ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")" # gets page's date from src/*.md files date. Only if .md file exists
 			url="$page_date:$i"
-			urls_sorted="$(echo "$urls_sorted\n$url" | sort -r)"
+			urls_sorted="$(echo "$urls_sorted\n$url" | sort --reverse)"
 		fi
 	done
-
-	echo "$urls_sorted"
-	
-	for i in $urls_sorted; do
-		if ! echo $i | grep -Eq "index|contact"; then
-			url=$(echo $i | cut -d: -f2-)
-			echo $url
-			page_title=$(head -n 1 "$4/${url%\.html}.md" | cut -c 3-)
-			page_date=$(head -2 "$4/${url%\.html}.md" | tail -1)
-			item="<li><a href="\"${url}\"">${page_title}</a>${page_date}</li>"
+    
+    printf "Article list\\n$urls_sorted"
+    echo >&2 
+    # Prepare article list
+	for i in "$urls_sorted"; do
+		if echo "$i" | grep -Eqv "index|contact"; then
+			url="$(echo "$i" | cut -d ':' -f2-)"
+            page_title="$(cat "$3/$url" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
+			[ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")"
+            item='<li><a href=\"'"${url}"'\">'"${page_title}"'</a>'"${page_date}"'</li>'
 			items=$items$item
 		fi
 	done
-	sed -i '' -e "s|</article>|<ul class="articles">${items}</ul></article>|g" "$3/index.html"
+
+    # Append article list
+    #TODO: add pattern to search article list name
+    # search for the Article list title 
+    # save to a variable
+    # use that variable to append the article list under it
+#	sed -e "|Article s|</article>|<ul class="articles">${items}</ul></article>|g" "$3/index.html"
 }
 
 render_sitemap() {
