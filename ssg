@@ -92,7 +92,8 @@ main() {
 	test -n "$urls" &&
 	render_sitemap "$urls" "$base_url" "$date" > "$dst/sitemap.xml"
 
-	render_article_list "$urls" "$base_url" "$dst" "$src"
+    render_article_list "$urls" "$base_url" "$dst" "$src"
+
 
 	print_status 'url' 'urls' "$urls" >&2
 	echo >&2
@@ -317,7 +318,7 @@ render_article_list() {
     
     printf "Article list\\n$urls_sorted"
     echo >&2 
-    # Prepare article list
+    # Create article list
 	for i in "$urls_sorted"; do
 		if echo "$i" | grep -Eqv "index|contact"; then
 			url="$(echo "$i" | cut -d ':' -f2-)"
@@ -329,11 +330,17 @@ render_article_list() {
 	done
 
     # Append article list
-    #TODO: add pattern to search article list name
-    # search for the Article list title 
-    # save to a variable
-    # use that variable to append the article list under it
-#	sed -e "|Article s|</article>|<ul class="articles">${items}</ul></article>|g" "$3/index.html"
+    sed -i "s|</article>|<ul class="articles">${items}</ul></article>|g" "$3/index.html"
+}
+
+get_page_date(){
+    local file="$1"
+    if [ -f "$file" ]; then
+        # search for date pattern
+        date
+    else
+        exit 2
+    fi
 }
 
 render_sitemap() {
