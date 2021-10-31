@@ -257,6 +257,14 @@ render_md_files_lowdown() {
 	done
 }
 
+render_md2html(){
+    lowdown \
+		--html-no-escapehtml \
+		--html-no-skiphtml \
+		--parse-no-metadata \
+		--parse-no-autolink
+}
+
 
 render_md_files_Markdown_pl() {
     while read -r f;	do
@@ -299,38 +307,43 @@ list_pages() {
 }
 
 render_article_list() {
-    local urls="$1"
-	echo "${urls}"
-    local base_url="$2"
-	local items=""
-    local date_format="%B %e, %Y"
-    # Sort pages by date
-    local files="$(list_files "$3" | grep '\.html$' | sed 's|\./||g')"
-	for i in ${files}; do
-		if echo "$i" | grep -Eqv "index|contact"; then
-            page_title="$(echo "$i" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
-            # IDEA: if there is not date inside de text, get it from files date
-			[ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")" # gets page's date from src/*.md files date. Only if .md file exists
-			url="$page_date:$i"
-			urls_sorted="$(echo "$urls_sorted\n$url" | sort --reverse)"
-		fi
-	done
-    
-    printf "Article list\\n$urls_sorted"
-    echo >&2 
-    # Create article list
-	for i in "$urls_sorted"; do
-		if echo "$i" | grep -Eqv "index|contact"; then
-			url="$(echo "$i" | cut -d ':' -f2-)"
-            page_title="$(cat "$3/$url" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
-			[ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")"
-            item='<li><a href=\"'"${url}"'\">'"${page_title}"'</a>'"${page_date}"'</li>'
-			items=$items$item
-		fi
-	done
+    if [ -n "$ARTICLE_LIST_TITLE" ]; then
+        local urls="$1"
+        echo "${urls}"
+        local base_url="$2"
+        local items=""
+        local date_format="%B %e, %Y"
+        # Sort pages by date
+        local files="$(list_files "$3" | grep '\.html$' | sed 's|\./||g')"
+        for i in ${files}; do
+            if echo "$i" | grep -Eqv "index|contact"; then
+                page_title="$(echo "$i" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
+                # IDEA: if there is not date inside de text, get it from files date
+                [ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")" # gets page's date from src/*.md files date. Only if .md file exists
+                url="$page_date:$i"
+                urls_sorted="$(echo "$urls_sorted\n$url" | sort --reverse)"
+            fi
+        done
+        
+        printf "Article list\\n$urls_sorted"
+        echo >&2 
+        # Create article list
+        for i in "$urls_sorted"; do
+            if echo "$i" | grep -Eqv "index|contact"; then
+                url="$(echo "$i" | cut -d ':' -f2-)"
+                page_title="$(cat "$3/$url" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
+                [ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")"
+                item='<li><a href=\"'"$base_url/${url}"'\">'"${page_title}"'</a>'"${page_date}"'</li>'
+                items=$items$item
+            fi
+        done
 
-    # Append article list
-    sed -i "s|</article>|<ul class="articles">${items}</ul></article>|g" "$3/index.html"
+        # Append article list
+        #TODO: with the article list title ad this line after it.
+        local line="$(cat "$3/index.html" | pup 'h2' | grep "$ARTICLE_LIST_TITLE" | grep --invert-match '<.*[Hh]*.>')"
+        local html_line="$(echo "## $line" | render_md2html)"
+        sed -i 's|<.*[Hh]*.>'"$ARTICLE_LIST_TITLE"'<.*[Hh]*.>|'"$html_line"'<ul class="articles">'"${items}"'</ul>|g' "$3/index.html"
+    fi
 }
 
 get_page_date(){
