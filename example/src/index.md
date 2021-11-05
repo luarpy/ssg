@@ -6,4 +6,4 @@ This is an example Markdown document which will be converted to an HTML file. It
 ```sh
 git clone https://github.com/luarpy/ssg.git
 ``` 
-## Article
+## Article List

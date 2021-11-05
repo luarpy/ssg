@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <!--DOC HEADER-->
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <meta name="referrer" content="no-referrer">
+      <title> ssg</title> <!--Here goes file's title after processing-->
+
+<link rel="stylesheet" type="text/css" href="../styles.css">
+    </head>
+    <body class="">
+        <nav class="menu">
+            <div class="nav-left">
+                <ul>
+                    <li>
+                        <a href="index.html">
+                            <span class="sitename">JAJA</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-right">
+                <ul>
+                    <li>
+                        <a href="contact.html">contact</a>
+                    </li>
+                    <li>
+                        <a href="">github</a>
+                    </li>
+                    <li>
+                        <a href="">mastodon</a>
+                    </li>
+                    <li>
+                        <a href="">twitter</a>
+                    </li>
+                    <li style="padding: 9px">
+                        <a id="darkmodetoggle" class="" onclick="darkModeToggle()"></a>
+                    </li>
+                
+                </ul>
+            </div>
+        </nav>
+        
+<h1 id="ssg">ssg</h1>
+
+<p>Custom static site generator based on the work of <a href="https://www.romanzolotarev.com/ssg.html">romanzolotarev</a> and modified by <a href="https://www.youtube.com/watch?v=N_ttw2Dihn8">NotTheBee</a>.</p>
+
+<h2 id="Dependencies">Dependencies</h2>
+
+<ul>
+<li>lowdown or Markdown.pl</li>
+<li><a href="https://github.com/EricChiang/pup">pup</a></li>
+</ul>
+
+<h6 id="Debian%20based">Debian based</h6>
+
+<pre><code class="language-sh">sudo apt install lowdown pup
+</code></pre>
+
+<h2 id="Installation">Installation</h2>
+
+<pre><code class="language-sh">git clone https:&#47;&#47;github.com&#47;luarpy&#47;ssg.git
+cd ssg
+chmod +x ssg
+</code></pre>
+
+<p>And place it in your PATH variable if you want to use it as a system binary:
+<code>sh
+export PATH="$PATH:$PWD"
+</code></p>
+
+<h2 id="Usage">Usage</h2>
+
+<p>Follow this <a href="https://www.romanzolotarev.com/ssg.html#:%7E:text=bin/Markdown.pl%0A%24-,usage,-make%20sure%20ssg6">example</a></p>
+
+<h3 id="Configuration%20file">Configuration file</h3>
+
+<p>It will be used if it exist under <code>src&#47;.config</code> directory. Otherwise it will use the default values.
+Configuration file example:
+<code>txt
+STYLESHEET="..&#47;path&#47;to&#47;stylesheet.css"
+MAINPAGE="mainpagename.html" # or "mainpage.md"
+DOMAIN="domain.example.com"
+SCRIPT="..&#47;path&#47;to&#47;script.js" # or "..&#47;path&#47;to&#47;scripts_dir"
+</code>
+I ended up needing a configuration file because I only use one CSS style sheet and I did not wanted to copy it to every subdirectory inside the main path. This way the script manages the relative path to this files.</p>
+
+<h2 id="TODO">TODO</h2>
+
+<ul>
+<li>[ ] Remove space between tags so the file characters are less, this way I could reduce file&#39;s size </li>
+<li>[ ] Darkmode button does not work</li>
+</ul>
+        <button class="dark-mode-toggle" onclick="setDarkMode()">☀</button>
+<script type="text/javascript" src="../toggle.js"></script>
+<noscript>JavaScript is disabled in your browser </noscript>
+<p class="main-page"><a class="back" href="https://www.example.com">Página Principal</a></p>
+    </body>
+    <!--DOC FOOTER-->
+</html>

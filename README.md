@@ -39,3 +39,6 @@ I ended up needing a configuration file because I only use one CSS style sheet a
 ## TODO
 - [ ] Remove space between tags so the file characters are less, this way I could reduce file's size 
 - [ ] Darkmode button does not work
+- [ ] Add favicon support
+- [ ] Generate and search for a PAGE_TITLE_PATTERN in the file, so it gets replaces with page's name
+- [ ] Add support in the CSS file for the navigation bar
