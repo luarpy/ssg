@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # LICENSE: https://www.gnu.org/licenses/gpl-3.0.en.html
 
@@ -14,7 +14,6 @@ main() {
 	test -n "$4" || usage
  	test -d "$1" || no_dir "$1"
  	test -d "$2" || no_dir "$2"
-
 
 	src=$(readlink_f "$1")
 	dst=$(readlink_f "$2")
@@ -32,10 +31,10 @@ main() {
 		done < "$src/.ssgignore"
 	)
 
-	title="$3"
+	local title="$3"
 
-	h_file="$src/_header.html"
-	f_file="$src/_footer.html"
+	local h_file="$src/_header.html"
+    local f_file="$src/_footer.html"
 	test -f "$f_file" && FOOTER=$(cat "$f_file") && export FOOTER
     test -f "$h_file" && HEADER=$(cat "$h_file") && export HEADER
 	list_dirs "$src" |
@@ -74,14 +73,12 @@ main() {
 		echo "$fs" | grep -Ev '\.md$|\.html$' |	(cd "$src" && cpio -pu "$dst")
 	fi
     
-	printf '[ssg] ' >&2
-	print_status 'file, ' 'files, ' "$fs" >&2
-
     # Features
     add_stylesheet "$2"
     add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
     add_noscript "$2"
     add_mainpage_button "$2" "$4"
+    replace_DOMAIN_NAME "$2"
 
 	# sitemap
 
@@ -94,7 +91,8 @@ main() {
 
     render_article_list "$urls" "$base_url" "$dst" "$src"
 
-
+	printf '[ssg] ' >&2
+	print_status 'file, ' 'files, ' "$fs" >&2
 	print_status 'url' 'urls' "$urls" >&2
 	echo >&2
 }
@@ -139,13 +137,16 @@ add_script(){
 }
 
 add_noscript(){
-    local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
-    cd "$1"
-    while read file; do
-        local noscript_line="<noscript>JavaScript is disabled in your browser </noscript>"
-        sed -i "/<\/body>/i $noscript_line" "$file"
-    done < <(echo "$files")
-    cd ..
+    if [ "$NOSCRIPT" == "Yes" ]; then
+        local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+
+        cd "$1"
+        while read file; do
+            local noscript_line="<noscript>JavaScript is disabled in your browser </noscript>"
+            sed -i "/<\/body>/i $noscript_line" "$file"
+        done < <(echo "$files")
+        cd ..
+    fi
 }
 
 add_mainpage_button(){
@@ -153,13 +154,29 @@ add_mainpage_button(){
     local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
     cd "$1"
     while read file; do
-        if echo "$file" | grep -Eqv "index\|contact"; then
+        if ! echo "$file" | grep -q "index"; then
             local text_line="<p class=\"main-page\"><a class=\"back\" href=\"$2\">$BUTTON_TEXT<\/a><\/p>" 
-            sed -i "/<\/body>/i $text_line" "$file"
+            if grep -Eq "<*.footer*.>"; then
+                #FIXME: get <footer>*</footer> line and use it to replace in place
+                local footer_segment="$(echo "$file" | pup 'footer')"
+                sed "/<footer*.>/i" $text_line "$file"
+            else
+                sed -i "/<\/body>/i $text_line" "$file"
+            fi
         fi
     done < <(echo "$files")
     cd ..
+}
 
+replace_DOMAIN_NAME(){
+    if [ -n "$DOMAIN_NAME" ]; then
+        local files="$(list_files "$1" | grep '\.html$' | sed 's|\./||g')"
+        cd "$1"
+        while read file; do
+            sed -i 's|DOMAIN_NAME|'"$DOMAIN_NAME"'|g' "$file"
+        done < <(echo "$files")
+        cd ..
+    fi
 }
 
 realpath_f(){
@@ -281,15 +298,15 @@ render_html_file() {
     fi
     
     [ -z "$file" ] && return 1
-    local title="$1"
+    local title
     
     # Replace document title name
     local H1_pattern="<*.[Hh]1*.>\|<\/*.[Hh]1*.>"
     if echo "$file" | grep --quiet "$H1_pattern" >&2; then
         #FIXME: se le queda al principio del nombre del título un espacio
         title="$(echo "$file" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
-        
     fi
+    [ "x$title" == 'x' ] && title="$1" # Manera robusta de comprobar si un string tiene caracteres de espacio o está vacío
 
     local title_pattern="<*.title*.><\/*.title*.>"
     HEADER="$(echo "$HEADER" | sed "s/$title_pattern/\<title\>$title\<\/title\>/")"
@@ -333,7 +350,7 @@ render_article_list() {
                 url="$(echo "$i" | cut -d ':' -f2-)"
                 page_title="$(cat "$3/$url" | pup 'h1' | grep --invert-match '<.*[Hh]1.*>')"
                 [ -f "$4/${i%\.html}.md" ] && local page_date="$(date -r "$4/${i%\.html}.md" +"$date_format")"
-                item='<li><a href=\"'"$base_url/${url}"'\">'"${page_title}"'</a>'"${page_date}"'</li>'
+                item='<li><a href=\"'"$base_url/${url}"'\">'"${page_title}"'</a><p class="date">'"${page_date}"'</p></li>'
                 items=$items$item
             fi
         done
