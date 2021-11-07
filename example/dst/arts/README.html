@@ -9,14 +9,17 @@
       <title> ssg</title> <!--Here goes file's title after processing-->
 
 <link rel="stylesheet" type="text/css" href="../styles.css">
+<link rel="stylesheet" type="text/css" href="../styles.css">
+<link rel="stylesheet" type="text/css" href="../styles.css">
     </head>
     <body class="">
         <nav class="menu">
             <div class="nav-left">
                 <ul>
-                    <li>
-                        <a href="index.html">
-                            <span class="sitename">JAJA</span>
+                    <li>    
+                        <a href="https://example.com">
+                            <img class="logo" src="favicon.jpg" >
+                            <span class="sitename">Example page</span>
                         </a>
                     </li>
                 </ul>
@@ -24,28 +27,24 @@
             <div class="nav-right">
                 <ul>
                     <li>
-                        <a href="contact.html">contact</a>
+                        <a href="https://example.com/contact.html">Contact</a>
                     </li>
                     <li>
-                        <a href="">github</a>
+                        <a href="https://example.com/tab">Tab example</a>
                     </li>
                     <li>
-                        <a href="">mastodon</a>
-                    </li>
-                    <li>
-                        <a href="">twitter</a>
-                    </li>
-                    <li style="padding: 9px">
-                        <a id="darkmodetoggle" class="" onclick="darkModeToggle()"></a>
+                        <button onclick="setDarkMode()" class="dark-mode-toggle-button">☀</button>
+                        <script type="text/Javascript" src="https://luarpy.github.io/toggle.js"></script>
                     </li>
                 
                 </ul>
             </div>
         </nav>
+        <noscript>This page uses a little bit of Javascript but it is not neccesary for normal usage</noscript>
         
 <h1 id="ssg">ssg</h1>
 
-<p>Custom static site generator based on the work of <a href="https://www.romanzolotarev.com/ssg.html">romanzolotarev</a> and modified by <a href="https://www.youtube.com/watch?v=N_ttw2Dihn8">NotTheBee</a>.</p>
+<p>Custom static site generator based on the work of <a href="https://www.romanzolotarev.com/ssg.html">romanzolotarev</a> and modified by <a href="https://www.youtube.com/watch?v=N_ttw2Dihn8">Wolfgang</a>.</p>
 
 <h2 id="Dependencies">Dependencies</h2>
 
@@ -66,37 +65,59 @@ cd ssg
 chmod +x ssg
 </code></pre>
 
-<p>And place it in your PATH variable if you want to use it as a system binary:
-<code>sh
-export PATH="$PATH:$PWD"
-</code></p>
+<p>For a fast usage place it in your PATH variable if you want to use it as a system binary:</p>
+
+<pre><code class="language-sh">export PATH="$PATH:$PWD"
+</code></pre>
+
+<p>or download the script directly to your personal binary directory inside your home:</p>
+
+<pre><code class="language-bash">curl https:&#47;&#47;raw.githubusercontent.com&#47;luarpy&#47;ssg&#47;main&#47;ssg --output "$HOME&#47;.local&#47;bin&#47;ssg"; chmod +x "$HOME&#47;.local&#47;bin&#47;ssg"
+
+</code></pre>
 
 <h2 id="Usage">Usage</h2>
 
 <p>Follow this <a href="https://www.romanzolotarev.com/ssg.html#:%7E:text=bin/Markdown.pl%0A%24-,usage,-make%20sure%20ssg6">example</a></p>
 
+<pre><code class="language-bash">ssg src&#47; dst&#47; &#39;Example blog&#39; &#39;https:&#47;&#47;example.com&#39;
+</code></pre>
+
+<p>If you would like to update all the articles and files in your destiny folder, you will have to remove the control file:</p>
+
+<pre><code class="language-bash">rm dst&#47;.files -f; ssg src&#47; dst&#47; &#39;Example blog&#39; &#39;https:&#47;&#47;example.com&#39;
+</code></pre>
+
 <h3 id="Configuration%20file">Configuration file</h3>
 
-<p>It will be used if it exist under <code>src&#47;.config</code> directory. Otherwise it will use the default values.
-Configuration file example:
-<code>txt
-STYLESHEET="..&#47;path&#47;to&#47;stylesheet.css"
-MAINPAGE="mainpagename.html" # or "mainpage.md"
-DOMAIN="domain.example.com"
-SCRIPT="..&#47;path&#47;to&#47;script.js" # or "..&#47;path&#47;to&#47;scripts_dir"
-</code>
-I ended up needing a configuration file because I only use one CSS style sheet and I did not wanted to copy it to every subdirectory inside the main path. This way the script manages the relative path to this files.</p>
+<p>It will be used if it exists under <code>src&#47;.config</code> directory. Otherwise it will use the default values.
+Configuration file example:</p>
+
+<pre><code class="language-bash">STYLESHEET="style.css"
+SCRIPT="toggle.js" 
+NOSCRIPT="Yes"
+BUTTON_TEXT="Main page" 
+https://example.com="https:&#47;&#47;example.com" 
+</code></pre>
 
 <h2 id="TODO">TODO</h2>
 
 <ul>
 <li>[ ] Remove space between tags so the file characters are less, this way I could reduce file&#39;s size </li>
-<li>[ ] Darkmode button does not work</li>
+<li>[ ] Generate Table of Contents for every file and append it</li>
+<li>[ ] Update the html header and footer with the neweer examples</li>
 </ul>
-        <button class="dark-mode-toggle" onclick="setDarkMode()">☀</button>
+<script type="text/javascript" src="../toggle.js"></script>
+<p class="main-page"><a class="back" href="https://example.com">Página Principal</a></p>
 <script type="text/javascript" src="../toggle.js"></script>
 <noscript>JavaScript is disabled in your browser </noscript>
-<p class="main-page"><a class="back" href="https://www.example.com">Página Principal</a></p>
+<p class="main-page"><a class="back" href="https://example.com">Main page</a></p>
+<script type="text/javascript" src="../toggle.js"></script>
+<noscript>JavaScript is disabled in your browser </noscript>
+<p class="main-page"><a class="back" href="https://example.com">Main page</a></p>
     </body>
+    <footer>
+        <p> Footer text</p>
+    </footer>
     <!--DOC FOOTER-->
 </html>

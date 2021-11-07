@@ -1,3 +1,14 @@
+:root{
+    --bg: #fefefe;
+    --fg: #111;
+    --link: #5175af;
+    --link_v: #0b0080;
+    --link_h: #06e;
+    --bg_grey: #eee;
+    --dark_grey: #999;
+    --highligth: #999;
+}
+
 * {
     font-family: inherit;
     background-color: inherit;
@@ -6,6 +17,8 @@
     box-sizing: border-box;
 }
 
+
+
 html {
     font-size: calc(1em + 0.33vw);
 }
@@ -13,8 +26,8 @@ html {
 body {
     font-family: Arial, Helvetica Neue, sans-serif;
     line-height: 1.5;
-    background-color: #020202;
-    color: #a9a9b3;
+    background-color: var(--bg);
+    color: var(--fg);
     max-width: 700px;
     margin: auto;
 }
@@ -43,7 +56,7 @@ p {
 
 a {
     text-decoration: none;
-    border-bottom: 1px solid #ce374b;
+    border-bottom: 1px solid var(--highligth);
     color: inherit;
     outline-offset: 2px;
 }
@@ -58,7 +71,7 @@ h2 a, h3 a, h4 a {
 }
 
 h2 a:hover, h3 a:hover, h4 a:hover {
-    border-bottom: 1px solid #ce374b;
+    border-bottom: 1px solid var(--highligth);
 }
 
 h1 {
@@ -88,7 +101,7 @@ code {
 }
 
 table, td {
-    border: 1px solid #333;
+    border: 1px solid var(--fg);
 }
 
 td {
@@ -97,8 +110,8 @@ td {
 }
 
 thead, tfoot {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--bg);
+    color: var(--fg);
 }
 
 .identifier-column, .identifier-row {
@@ -147,22 +160,18 @@ thead, tfoot {
 .back {
     font-size: 1rem;
     border-radius: 0.33em;
-    background: #111;
-    color: #fefefe;
+    background: var(--fg);
+    color: var(--bg);
     padding: 0.5rem;
     border: 0;
 }
 
-.dark-mode>.dark-mode-toggle {
-    color: black;
-}
-
 .dark-mode {
-    background-color: #fefefe;
-    color: #222;
+    background-color: var(--fg);
+    color: var(--bg);
 }
 
-.dark-mode-toggle {
+.dark-mode-toggle-button {
     border: none;
     padding: 15px 32px;
     text-align: center;
@@ -174,17 +183,13 @@ thead, tfoot {
     outline: none;
     font-size: 2rem;
     background: transparent;
-    color: #a9a9b3;
+    color: inherit;
+    background-color: transparent;
 }
 
 .main-page {
     padding-top: 2rem;
     padding-bottom: 5rem;
-}
-
-.date {
-    margin-top: -1rem;
-    margin-bottom: 2rem;
 }
 
 .headers {
@@ -199,6 +204,12 @@ thead, tfoot {
 .subheaders2 {
     margin-left: 26px;
     font-size: 16px;
+}
+
+.logo{
+    list-style: none;
+    max-height: 40px;
+    border-radius: 60px;
 }
 
 @media screen and (max-width: 360px) {
@@ -233,4 +244,87 @@ thead, tfoot {
     pre code {
         white-space: pre-wrap !important;
     }
+}
+
+img {
+    vertical-align: middle;
+    border: 0;
+    max-width: 100%;
+}
+
+nav ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	overflow: hidden;
+}
+nav ul li {
+	/* This allow us to arrange list items in a row, without using float */
+	display: inline-block;
+	list-style-type: none;
+}
+/* Create a style for the first level items */
+nav > div > ul > li > a {
+	display: block;
+	line-height: 2em;
+	padding: 0.5em 0em;
+	text-decoration: none;
+    border: none;
+	color: inherit !important;
+}
+
+nav > div.nav-right > ul > li > a {
+	padding: 0.5em 0.5em;
+    color: inherit;
+    border: none;
+}
+
+nav > div > ul > li > a:hover {
+	color: var(--dark_grey) !important;
+}
+.nav-left {
+	float: left;
+}
+
+.nav-left ul li {
+	float: left;
+}
+
+.nav-right ul li {
+	float: right;
+}
+
+
+footer {
+	font-size: 13px;
+}
+
+ul.articles{
+    list-style: none;
+    color: var(--link);
+    padding: 0;
+    margin: 0;
+}
+
+ul.articles li{
+    margin: 0;
+}
+
+ul.articles a {
+    border: none;
+}
+
+ul.articles a:hover {
+    color: var(--link_h);
+}
+
+.date{
+    font-size: 13px;
+    color: var(--dark_grey);
+    margin-top: auto;
+}
+
+footer a{
+    border: none;
+    color: var(--link);
 }

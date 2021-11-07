@@ -9,14 +9,17 @@
       <title> Hello World</title> <!--Here goes file's title after processing-->
 
 <link rel="stylesheet" type="text/css" href="styles.css">
+<link rel="stylesheet" type="text/css" href="styles.css">
+<link rel="stylesheet" type="text/css" href="styles.css">
     </head>
     <body class="">
         <nav class="menu">
             <div class="nav-left">
                 <ul>
-                    <li>
-                        <a href="index.html">
-                            <span class="sitename">JAJA</span>
+                    <li>    
+                        <a href="https://example.com">
+                            <img class="logo" src="favicon.jpg" >
+                            <span class="sitename">Example page</span>
                         </a>
                     </li>
                 </ul>
@@ -24,24 +27,20 @@
             <div class="nav-right">
                 <ul>
                     <li>
-                        <a href="contact.html">contact</a>
+                        <a href="https://example.com/contact.html">Contact</a>
                     </li>
                     <li>
-                        <a href="">github</a>
+                        <a href="https://example.com/tab">Tab example</a>
                     </li>
                     <li>
-                        <a href="">mastodon</a>
-                    </li>
-                    <li>
-                        <a href="">twitter</a>
-                    </li>
-                    <li style="padding: 9px">
-                        <a id="darkmodetoggle" class="" onclick="darkModeToggle()"></a>
+                        <button onclick="setDarkMode()" class="dark-mode-toggle-button">☀</button>
+                        <script type="text/Javascript" src="https://luarpy.github.io/toggle.js"></script>
                     </li>
                 
                 </ul>
             </div>
         </nav>
+        <noscript>This page uses a little bit of Javascript but it is not neccesary for normal usage</noscript>
         
 <h1 id="Hello%20World">Hello World</h1>
 
@@ -52,11 +51,15 @@
 <pre><code class="language-sh">git clone https:&#47;&#47;github.com&#47;luarpy&#47;ssg.git
 </code></pre>
 
-<h2 id="Article%20List">Article List</h2><ul class="articles"><li><a href="https://www.example.com/arts/README.html"> ssg</a>October 27, 2021</li></ul>
-        <button class="dark-mode-toggle" onclick="setDarkMode()">☀</button>
+<h2 id="Article%20List">Article List</h2><ul class="articles"><li><a href="https://example.com/arts/README.html"> ssg</a><p class="date">November  7, 2021</p></li></ul>
+<script type="text/javascript" src="toggle.js"></script>
 <script type="text/javascript" src="toggle.js"></script>
 <noscript>JavaScript is disabled in your browser </noscript>
-<p class="main-page"><a class="back" href="https://www.example.com">Página Principal</a></p>
+<script type="text/javascript" src="toggle.js"></script>
+<noscript>JavaScript is disabled in your browser </noscript>
     </body>
+    <footer>
+        <p> Footer text</p>
+    </footer>
     <!--DOC FOOTER-->
 </html>

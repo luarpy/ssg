@@ -18,6 +18,10 @@ main() {
 	src=$(readlink_f "$1")
 	dst=$(readlink_f "$2")
 
+    local base_url="$4"
+
+    [ -n "$DOMAIN_NAME" ] && base_url="$DOMAIN_NAME"
+    
 	IGNORE=$(
 		if ! test -f "$src/.ssgignore"
 		then
@@ -77,12 +81,11 @@ main() {
     add_stylesheet "$2"
     add_script "$2"    #FIXME: falta añadir la corrección para el boton de la página principal
     add_noscript "$2"
-    add_mainpage_button "$2" "$4"
+    add_mainpage_button "$2" "$base_url"
     replace_DOMAIN_NAME "$2"
 
 	# sitemap
 
-	local base_url="$4"
 	local date=$(date +%Y-%m-%d)
  	local urls=$(list_pages "$src")
 
